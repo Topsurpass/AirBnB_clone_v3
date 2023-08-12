@@ -42,9 +42,9 @@ def post_city_by_state(state_id):
         abort(404)
 
     if not request.get_json():
-        return jsonify({"error": "Not a JSON"})
+        return jsonify({"error": "Not a JSON"}), 400
     elif 'name' not in request.get_json():
-        return jsonify({"error": "Missing name"})
+        return jsonify({"error": "Missing name"}), 400
     else:
         """Create new obj with the data and save in database"""
         post_data = request.get_json()
