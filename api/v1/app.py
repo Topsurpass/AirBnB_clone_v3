@@ -30,7 +30,7 @@ def handle_err_404(err):
     """Rather than html file when resource is not found, return
     json format since it's a webservice or api
     """
-    return make_response(jsonify({"error": 'Not found'}))
+    return make_response(jsonify({"error": 'Not found'}), 404)
 
 
 if __name__ == "__main__":
