@@ -20,10 +20,12 @@ CORS(app, origins="0.0.0.0")
 """Register the blueprint created in the folder __init__ file"""
 app.register_blueprint(app_views)
 
+
 @app.teardown_appcontext
 def tear_down(self):
     """Close storage by closing query after each session"""
     storage.close()
+
 
 @app.errorhandler(404)
 def handle_err_404(err):
