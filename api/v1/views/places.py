@@ -82,3 +82,63 @@ def update_place(place_id):
     place.name = new_name['name']
     place.save()
     return jsonify(place.to_dict()), 200
+
+@app_views.route("/places_search", methods=["POST"], strict_slashes=False)
+def search_place():
+    """retrieves all Place objects depending of the JSON in the
+    body of the request"""
+
+    """If the request is not in json format"""
+    req = request.get_json()
+    if not req:
+        abort(404, "Not a JSON")
+
+    """If the request is json but empty or does not have any of the key states,
+    cities, and amenities, retrieve all Place objects"""
+    if req is None or (
+        req.get('states') is None and
+        req.get('cities') is None and
+        req.get('amenities') is None
+        ):
+        all_places = storage.all(Place)
+        return jsonify([plc.to_dict() for plc in all_places.values()]), 200
+
+    """If any of the optional keys are found, retrieve all its places"""
+    place_obj = []
+    
+    """Get the array of state ids in the json value of the key states"""
+    if req.get('states'):
+        state_objs = []
+        for ids in req.get('states'):
+            state_objs.append(storage.get(State, ids))
+
+        for st in state_objs:
+            for cty in st.cities:
+                for pl in cty.places:
+                    place_obj.append(pl)
+
+    """Get the array of city ids in the json value of the key cities"""
+    if req.get('cities'):
+        city_objs = []
+        for ids in req.get('cities'):
+            city_objs.append(storage.get(City, ids))
+
+        for cty in city_objs:
+            for pl in cty.places:
+                """If place obj is not already in place_obj array"""
+                if pl not in place_obj:
+                    place_obj.append(pl)
+
+    if req.get('amenities'):
+        """If no state and cities key, use all place obj"""
+        if not place_obj:
+            place_obj = storage.all(Place).values()
+        """Get all amenities obj in list"""
+        amen_obj = [storage.get(Amenity, ids) for ids in req.get('amenities')]
+        """Filter by adding only places with all the amenities specified"""
+        place_obj = [plc for plc in place_obj if all(
+            [ame in place.amenities for ame in amen_obj])]
+
+    return jsonify([obj.to_dict() for obj in place_obj])
+
+            
